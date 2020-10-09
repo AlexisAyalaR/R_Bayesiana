@@ -72,7 +72,7 @@ mod1_string = " model {
 		y[i] ~ dbin(phi[i], n[i])
 		logit(phi[i]) = alpha[ID[i]] + b[1]*Age[i] + b[2]*OMElow[i] + b[3]*Loud[i] + b[4]*Noiseincoherent[i]
 	}
-	for (j in 1:length(y)) {
+	for (j in 1:max(ID)) {
 	  alpha[j] ~ dnorm(mu, tau2)
 	}
 	
@@ -97,13 +97,22 @@ data1_jags = as.list(data1_jags)
 
 params1 = c("alpha", "b", "mu", "tau2")
 
-mod = jags.model(textConnection(mod1_string), data=data1_jags, n.chains=3)
+mod1 = jags.model(textConnection(mod1_string), data=data1_jags, n.chains=3)
 
-update(mod, 1e3)
+update(mod1, 1e3)
 
-mod_sim = coda.samples(model=mod,
-                       variable.names=params,
+mod_sim1 = coda.samples(model=mod1,
+                       variable.names=params1,
                        n.iter=5e3)
-mod_csim = as.mcmc(do.call(rbind, mod_sim))
+mod_csim1 = as.mcmc(do.call(rbind, mod_sim1))
 
+## Convergencia
+par(mfrow=c(3,2))
+plot(mod_sim1, ask=TRUE)
 
+gelman.diag(mod_sim1)
+autocorr.diag(mod_sim1)
+autocorr.plot(mod_sim1)
+effectiveSize(mod_sim1)
+
+dic = dic.samples(mod1, 1e3)
